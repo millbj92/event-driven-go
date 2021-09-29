@@ -16,7 +16,7 @@ After you've ensured RMQ is working, you can run the app with:
 
 You should see the message 'Hi' printed to your console.
 
-In [./internal/rabbitmq/rabbitmq.go](internal/rabbitmq/rabbitmq.go) you can see that we are starting as both a publisher and a subscriber to the same queue. 
+In the [rabbitmq.go](https://github.com/millbj92/go-rabbitmq/blob/a137c4971781b6b5c64b616a85a062ff490e9c5b/internal/rabbitmq/rabbitmq.go#L50-L88) file you can see that we are starting as both a publisher and a subscriber to the same queue. 
 
 If you'd like to publish a message to the queue to watch it be consumed, run `docker ps` to grab your docker container name and then run the following:
 
