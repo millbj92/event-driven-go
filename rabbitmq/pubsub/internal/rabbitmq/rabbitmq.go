@@ -2,6 +2,7 @@ package rabbitmq
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/streadway/amqp"
 )
@@ -14,6 +15,7 @@ type Service interface{
 type RabbitMQ struct {
 	Conn *amqp.Connection
 	Channel *amqp.Channel
+	Queue amqp.Queue
 }
 
 func (r *RabbitMQ) Connect() error {
@@ -30,15 +32,39 @@ func (r *RabbitMQ) Connect() error {
 		return err
 	}
 
-	_, err = r.Channel.QueueDeclare(
-		"TestQueue",
+	err = r.Channel.ExchangeDeclare(
+		"warranty",  
+		"fanout",
+		true,     
+		false,   
+		false,   
+		false,    
+		nil,     
+    ); 
+	if err != nil {
+		return err
+	}
+        
+
+	r.Queue, err = r.Channel.QueueDeclare(
+		"",
 		false,
 		false,
-		false,
+		true,
 		false,
 		nil,
 	)
+	if err != nil {
+		return err
+	}
 
+	err = r.Channel.QueueBind(
+		r.Queue.Name, 
+		"",    
+		"warranty",
+		false,
+		nil,
+    )
 	if err != nil {
 		return err
 	}
@@ -49,8 +75,8 @@ func (r *RabbitMQ) Connect() error {
 //Publish - takes in a string 'message' and pusblished to a rmq queue.
 func (r *RabbitMQ) Publish(message string) error {
 	err := r.Channel.Publish(
-		"",
-		"TestQueue",
+		"warranty",
+		r.Queue.Name,
 		false,
 		false,
 		amqp.Publishing{
@@ -68,23 +94,31 @@ func (r *RabbitMQ) Publish(message string) error {
 }
 
 func (r *RabbitMQ) Consume() {
+
 	msgs, err := r.Channel.Consume(
-		"TestQueue", 
-		"",
-		true,
-		false,
-		false,
+		r.Queue.Name,
+		"",     
+		true,  
+		false, 
+		false, 
 		false,
 		nil,
 	)
-
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("Application Error on Consume: %s", err)
 	}
 
-	for msg := range msgs {
-		fmt.Printf("Received Messsage: %s\n", msg.Body)
-	}
+	infinity := make(chan bool)
+
+	go func() {
+		for d := range msgs {
+		   log.Printf("Received New Message: %s", d.Body)
+		}
+     }()
+
+	
+	log.Println("Waiting for new messages. Press CTRL+C to exit.")
+	<- infinity
 }
 
 func NewRabbitMQService() *RabbitMQ {

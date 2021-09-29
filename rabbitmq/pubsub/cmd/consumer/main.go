@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/millbj92/go-rabbitmq/internal/rabbitmq"
+	rabbitmq "github.com/millbj92/go-events/rabbitmq/pubsub/internal/rabbitmq"
 )
 
 type App struct {
@@ -23,12 +23,6 @@ func Run() error {
 		return err
 	}
 	defer app.Rmq.Conn.Close()
-
-	err = app.Rmq.Publish("Hi")
-	if err != nil {
-		return err
-	}
-
 	app.Rmq.Consume()
 	
 	return nil

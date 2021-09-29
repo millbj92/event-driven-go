@@ -1,4 +1,4 @@
-module github.com/millbj92/go-rabbitmq
+module github.com/millbj92/go-events
 
 go 1.17
 
